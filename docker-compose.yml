@@ -43,6 +43,8 @@ services:
       - mysql_user_database
     depends_on:
       - db
+    links:
+      - kerberos-cam1
 
   web:
     build: ./web
@@ -72,8 +74,6 @@ services:
       - proxy-tier
     depends_on:
       - omgwtfssl
-    #links:
-    #  - kerberos-cam1
 
   omgwtfssl:
     image: paulczar/omgwtfssl
@@ -89,16 +89,33 @@ services:
     networks:
       - proxy-tier
 
-  #kerberos-cam1:
-  #  image: kerberos/kerberos
-  #  restart: always
-  #  volumes:
-  #    - ./data/kerberos/cam1/config:/etc/opt/kerberosio/config
-  #    - ./data/kerberos/cam1/capture:/etc/opt/kerberosio/capture
-  #    - ./data/kerberos/cam1/logs:/etc/opt/kerberosio/logs
-  #    - ./data/kerberos/cam1/web:/var/www/web/config
-  #  networks:
-  #    - proxy-tier
+  kerberos-cam1:
+    image: kerberos/kerberos
+    restart: always
+    ports:
+      - 8081:80
+    volumes:
+      - ./secrets/mailrc:/mailrc
+      - ./data/kerberos/cam1/config:/etc/opt/kerberosio/config
+      - ./data/kerberos/cam1/capture:/etc/opt/kerberosio/capture
+      - ./data/kerberos/cam1/logs:/etc/opt/kerberosio/logs
+      - ./data/kerberos/cam1/web:/var/www/web/config
+    networks:
+      - proxy-tier
+
+  kerberos-cam2:
+    image: kerberos/kerberos
+    restart: always
+    ports:
+      - 8082:80
+    volumes:
+      - ./secrets/mailrc:/mailrc
+      - ./data/kerberos/cam2/config:/etc/opt/kerberosio/config
+      - ./data/kerberos/cam2/capture:/etc/opt/kerberosio/capture
+      - ./data/kerberos/cam2/logs:/etc/opt/kerberosio/logs
+      - ./data/kerberos/cam2/web:/var/www/web/config
+    networks:
+      - proxy-tier
 
 networks:
   proxy-tier:
