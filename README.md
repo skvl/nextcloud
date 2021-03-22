@@ -18,3 +18,4 @@ Add `'overwriteprotocol' => 'https',` into `data/app/config/config.php` to allow
 * https://github.com/nextcloud/docker/tree/master/.examples/docker-compose/with-nginx-proxy-self-signed-ssl/mariadb/fpm
 * https://help.nextcloud.com/t/closed-both-the-android-and-the-linux-client-freeze-when-trying-to-grant-access-after-login/62383/7
 * https://github.com/linuxlifepage/nextcloud
+* https://github.com/nginx-proxy/nginx-proxy/issues/712#issuecomment-339868751
