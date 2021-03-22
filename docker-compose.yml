@@ -19,7 +19,7 @@ services:
       - mysql_user_database
 
   app:
-    image: nextcloud:fpm-alpine
+    image: nextcloud:21.0.0-apache
     restart: always
     volumes:
       - ./data/nextcloud:/var/www/html
@@ -28,9 +28,10 @@ services:
       - ./data/app/data:/var/www/html/data
       - ./data/app/themes:/var/www/html/themes
     environment:
+      - VIRTUAL_HOST=${DOM_BASE:-localhost}
       - NEXTCLOUD_ADMIN_PASSWORD_FILE=/run/secrets/nextcloud_admin_password
       - NEXTCLOUD_ADMIN_USER_FILE=/run/secrets/nextcloud_admin_user
-      - NEXTCLOUD_TRUSTED_DOMAINS=${DOM_1:-localhost}
+      - NEXTCLOUD_TRUSTED_DOMAINS=${DOM_BASE:-localhost}
       - MYSQL_PASSWORD_FILE=/run/secrets/mysql_user_password
       - MYSQL_DATABASE=/run/secrets/mysql_user_database
       - MYSQL_USER=/run/secrets/mysql_user_name
@@ -43,18 +44,6 @@ services:
       - mysql_user_database
     depends_on:
       - db
-    links:
-      - kerberos-cam1
-
-  web:
-    build: ./web
-    restart: always
-    volumes:
-      - ./data/nextcloud:/var/www/html:ro
-    environment:
-      - VIRTUAL_HOST=${DOM_1:-localhost}
-    depends_on:
-      - app
     networks:
       - proxy-tier
       - default
@@ -81,19 +70,54 @@ services:
     volumes:
       - ./data/certs:/certs
     environment:
-      - SSL_SUBJECT=${DOM_1:-localhost}
+      - SSL_SUBJECT=${DOM_BASE:-localhost}
       - CA_SUBJECT=Sergey Kovalev
-      - SSL_KEY=/certs/${DOM_1:-localhost}.key
-      - SSL_CSR=/certs/${DOM_1:-localhost}.csr
-      - SSL_CERT=/certs/${DOM_1:-localhost}.crt
+      - SSL_KEY=/certs/${DOM_BASE:-localhost}.key
+      - SSL_CSR=/certs/${DOM_BASE:-localhost}.csr
+      - SSL_CERT=/certs/${DOM_BASE:-localhost}.crt
+      - CA_EXPIRE=365
     networks:
       - proxy-tier
+
+  plex:
+    image: ghcr.io/linuxserver/plex
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - VERSION=docker
+      - PLEX_CLAIM= #optional
+    volumes:
+      - /data/plex/config:/config
+      - /tvseries:/tv
+      - /movies:/movies
+    restart: always
+
+  calibre-web:
+    image: ghcr.io/linuxserver/calibre-web
+    container_name: calibre-web
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - DOCKER_MODS=linuxserver/calibre-web:calibre
+    volumes:
+      - /data/calibre/config:/config
+      - /data/calibre/books:/books
+    ports:
+      - 8085:8083
+    restart: always
+    networks:
+      - default
 
   kerberos-cam1:
     image: kerberos/kerberos
     restart: always
     ports:
       - 8081:80
+    #environment:
+    #  - VIRTUAL_HOST=${DOM_KERBEROS_CAM_1:-localhost}
     volumes:
       - ./secrets/mailrc:/mailrc
       - ./data/kerberos/cam1/config:/etc/opt/kerberosio/config
@@ -101,13 +125,16 @@ services:
       - ./data/kerberos/cam1/logs:/etc/opt/kerberosio/logs
       - ./data/kerberos/cam1/web:/var/www/web/config
     networks:
-      - proxy-tier
+    #  - proxy-tier
+      - default
 
   kerberos-cam2:
     image: kerberos/kerberos
     restart: always
     ports:
       - 8082:80
+    #environment:
+    #  - VIRTUAL_HOST=${DOM_KERBEROS_CAM_1:-localhost}
     volumes:
       - ./secrets/mailrc:/mailrc
       - ./data/kerberos/cam2/config:/etc/opt/kerberosio/config
@@ -115,7 +142,8 @@ services:
       - ./data/kerberos/cam2/logs:/etc/opt/kerberosio/logs
       - ./data/kerberos/cam2/web:/var/www/web/config
     networks:
-      - proxy-tier
+    #  - proxy-tier
+      - default
 
 networks:
   proxy-tier:
