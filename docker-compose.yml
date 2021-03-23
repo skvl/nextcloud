@@ -28,10 +28,10 @@ services:
       - ./data/app/data:/var/www/html/data
       - ./data/app/themes:/var/www/html/themes
     environment:
-      - VIRTUAL_HOST=${DOM_BASE:-localhost}
+      - VIRTUAL_HOST=${DOM_NEXTCLOUD_IP:-localhost}
       - NEXTCLOUD_ADMIN_PASSWORD_FILE=/run/secrets/nextcloud_admin_password
       - NEXTCLOUD_ADMIN_USER_FILE=/run/secrets/nextcloud_admin_user
-      - NEXTCLOUD_TRUSTED_DOMAINS=${DOM_BASE:-localhost}
+      - NEXTCLOUD_TRUSTED_DOMAINS=${DOM_NEXTCLOUD_IP:-localhost}
       - MYSQL_PASSWORD_FILE=/run/secrets/mysql_user_password
       - MYSQL_DATABASE=/run/secrets/mysql_user_database
       - MYSQL_USER=/run/secrets/mysql_user_name
@@ -44,6 +44,10 @@ services:
       - mysql_user_database
     depends_on:
       - db
+      - calibre-web
+      - kerberos-cam1
+      - kerberos-cam2
+      - plex
     networks:
       - proxy-tier
       - default
@@ -70,11 +74,11 @@ services:
     volumes:
       - ./data/certs:/certs
     environment:
-      - SSL_SUBJECT=${DOM_BASE:-localhost}
+      - SSL_SUBJECT=${DOM_NEXTCLOUD_IP:-localhost}
       - CA_SUBJECT=Sergey Kovalev
-      - SSL_KEY=/certs/${DOM_BASE:-localhost}.key
-      - SSL_CSR=/certs/${DOM_BASE:-localhost}.csr
-      - SSL_CERT=/certs/${DOM_BASE:-localhost}.crt
+      - SSL_KEY=/certs/${DOM_NEXTCLOUD_IP:-localhost}.key
+      - SSL_CSR=/certs/${DOM_NEXTCLOUD_IP:-localhost}.csr
+      - SSL_CERT=/certs/${DOM_NEXTCLOUD_IP:-localhost}.crt
       - CA_EXPIRE=365
     networks:
       - proxy-tier
@@ -84,6 +88,8 @@ services:
     container_name: plex
     network_mode: host
     environment:
+      #- VIRTUAL_HOST=${DOM_PLEX:-localhost}
+      #- VIRTUAL_PORT=32400
       - PUID=1000
       - PGID=1000
       - VERSION=docker
@@ -98,18 +104,18 @@ services:
     image: ghcr.io/linuxserver/calibre-web
     container_name: calibre-web
     environment:
+      #- VIRTUAL_HOST=${DOM_CALIBRE:-localhost}
+      #- VIRTUAL_PORT=8083
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/London
+      - TZ=Europe/Moscow
       - DOCKER_MODS=linuxserver/calibre-web:calibre
     volumes:
       - /data/calibre/config:/config
       - /data/calibre/books:/books
     ports:
-      - 8085:8083
+      - 8083:8083
     restart: always
-    networks:
-      - default
 
   kerberos-cam1:
     image: kerberos/kerberos
@@ -117,16 +123,13 @@ services:
     ports:
       - 8081:80
     #environment:
-    #  - VIRTUAL_HOST=${DOM_KERBEROS_CAM_1:-localhost}
+    #  - VIRTUAL_HOST=${DOM_KERBEROS_CAM1:-localhost}
     volumes:
       - ./secrets/mailrc:/mailrc
       - ./data/kerberos/cam1/config:/etc/opt/kerberosio/config
       - ./data/kerberos/cam1/capture:/etc/opt/kerberosio/capture
       - ./data/kerberos/cam1/logs:/etc/opt/kerberosio/logs
       - ./data/kerberos/cam1/web:/var/www/web/config
-    networks:
-    #  - proxy-tier
-      - default
 
   kerberos-cam2:
     image: kerberos/kerberos
@@ -134,16 +137,13 @@ services:
     ports:
       - 8082:80
     #environment:
-    #  - VIRTUAL_HOST=${DOM_KERBEROS_CAM_1:-localhost}
+    #  - VIRTUAL_HOST=${DOM_KERBEROS_CAM2:-localhost}
     volumes:
       - ./secrets/mailrc:/mailrc
       - ./data/kerberos/cam2/config:/etc/opt/kerberosio/config
       - ./data/kerberos/cam2/capture:/etc/opt/kerberosio/capture
       - ./data/kerberos/cam2/logs:/etc/opt/kerberosio/logs
       - ./data/kerberos/cam2/web:/var/www/web/config
-    networks:
-    #  - proxy-tier
-      - default
 
 networks:
   proxy-tier:
