@@ -27,6 +27,16 @@ services:
       - ./data/app/custom_apps:/var/www/html/custom_apps
       - ./data/app/data:/var/www/html/data
       - ./data/app/themes:/var/www/html/themes
+      - /media/abooks:/media/abooks
+      - /media/books:/media/books
+      - /media/data:/media/data
+      - /media/documents:/media/documents
+      - /media/downloads:/media/downloads
+      - /media/movies:/media/movies
+      - /media/music:/media/music
+      - /media/photo:/media/photo
+      - /media/tvseries:/media/tvseries
+      - /media/video-tutorials:/media/tutorials
     environment:
       - VIRTUAL_HOST=${DOM_NEXTCLOUD_IP:-localhost}
       - NEXTCLOUD_ADMIN_PASSWORD_FILE=/run/secrets/nextcloud_admin_password
@@ -36,6 +46,8 @@ services:
       - MYSQL_DATABASE=/run/secrets/mysql_user_database
       - MYSQL_USER=/run/secrets/mysql_user_name
       - MYSQL_HOST=db
+      - PUID=1000
+      - PGID=1000
     secrets:
       - nextcloud_admin_password
       - nextcloud_admin_user
@@ -112,38 +124,59 @@ services:
       - DOCKER_MODS=linuxserver/calibre-web:calibre
     volumes:
       - /data/calibre/config:/config
-      - /data/calibre/books:/books
+      - /media/books:/books
     ports:
       - 8083:8083
     restart: always
 
+  qbittorrent:
+    image: ghcr.io/linuxserver/qbittorrent
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Moscow
+      - WEBUI_PORT=80
+    volumes:
+      - /path/to/appdata/config:/config
+      - /path/to/downloads:/downloads
+    ports:
+      - 6881:6881
+      - 6881:6881/udp
+      - 8084:80
+    restart: always
+
   kerberos-cam1:
-    image: kerberos/kerberos
+    build: ./kerberos
     restart: always
     ports:
       - 8081:80
     #environment:
     #  - VIRTUAL_HOST=${DOM_KERBEROS_CAM1:-localhost}
     volumes:
-      - ./secrets/mailrc:/mailrc
+      - ./secrets/ssmtp:/etc/ssmtp
       - ./data/kerberos/cam1/config:/etc/opt/kerberosio/config
       - ./data/kerberos/cam1/capture:/etc/opt/kerberosio/capture
       - ./data/kerberos/cam1/logs:/etc/opt/kerberosio/logs
       - ./data/kerberos/cam1/web:/var/www/web/config
+    secrets:
+      - kerberos_default_mail
 
   kerberos-cam2:
-    image: kerberos/kerberos
+    build: ./kerberos
     restart: always
     ports:
       - 8082:80
     #environment:
     #  - VIRTUAL_HOST=${DOM_KERBEROS_CAM2:-localhost}
     volumes:
-      - ./secrets/mailrc:/mailrc
+      - ./secrets/ssmtp:/etc/ssmtp
       - ./data/kerberos/cam2/config:/etc/opt/kerberosio/config
       - ./data/kerberos/cam2/capture:/etc/opt/kerberosio/capture
       - ./data/kerberos/cam2/logs:/etc/opt/kerberosio/logs
       - ./data/kerberos/cam2/web:/var/www/web/config
+    secrets:
+      - kerberos_default_mail
 
 networks:
   proxy-tier:
@@ -161,3 +194,5 @@ secrets:
     file: ./secrets/nextcloud_admin_password
   nextcloud_admin_user:
     file: ./secrets/nextcloud_admin_user
+  kerberos_default_mail:
+    file: ./secrets/kerberos_default_mail
