@@ -12,8 +12,8 @@ fi
 CAPTURE=/etc/opt/kerberosio/capture
 FILE=$(ls -t ${CAPTURE}/*.mp4 | head -1)
 
-TG_BOT=$(cat /run/secrets/tg_bot)
-TG_CHAT=$(cat /run/secrets/tg_surveillance_chat)
+TG_BOT=$(cat ${TG_BOT_FILE})
+TG_CHAT=$(cat ${TG_CHAT_FILE})
 
 curl -F chat_id="${TG_CHAT}" \
      -F document=@"${FILE}" \

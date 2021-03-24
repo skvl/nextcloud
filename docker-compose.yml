@@ -96,8 +96,6 @@ services:
     container_name: plex
     network_mode: host
     environment:
-      #- VIRTUAL_HOST=${DOM_PLEX:-localhost}
-      #- VIRTUAL_PORT=32400
       - PUID=1000
       - PGID=1000
       - VERSION=docker
@@ -113,8 +111,6 @@ services:
     image: ghcr.io/linuxserver/calibre-web
     container_name: calibre-web
     environment:
-      #- VIRTUAL_HOST=${DOM_CALIBRE:-localhost}
-      #- VIRTUAL_PORT=8083
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Moscow
@@ -150,8 +146,9 @@ services:
     restart: always
     ports:
       - 8081:80
-    #environment:
-    #  - VIRTUAL_HOST=${DOM_KERBEROS_CAM1:-localhost}
+    environment:
+      - TG_BOT_FILE=/run/secrets/tg_bot
+      - TG_CHAT_FILE=/run/secrets/tg_surveillance_chat
     volumes:
       - ./scripts:/scripts
       - ./data/kerberos/cam1/config:/etc/opt/kerberosio/config
@@ -167,8 +164,9 @@ services:
     restart: always
     ports:
       - 8082:80
-    #environment:
-    #  - VIRTUAL_HOST=${DOM_KERBEROS_CAM2:-localhost}
+    environment:
+      - TG_BOT_FILE=/run/secrets/tg_bot
+      - TG_CHAT_FILE=/run/secrets/tg_surveillance_chat
     volumes:
       - ./scripts:/scripts
       - ./data/kerberos/cam2/config:/etc/opt/kerberosio/config
