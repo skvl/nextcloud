@@ -11,7 +11,17 @@ docker-compose --env-file ./secrets/domains up -d --build
 
 # Notes
 
-Add `'overwriteprotocol' => 'https',` into `data/app/config/config.php` to allow "Grant Access" button work in Android App.
+## Nextcloud
+
+To connect from Android client do either:
+* Create a token and connect via QR-code
+* Add `'overwriteprotocol' => 'https',` into `data/app/config/config.php` to allow "Grant Access" button work in Android App.
+
+## qBittorrent
+
+If you get a `Unauthorized` then add `WebUI\HostHeaderValidation=false` into `./data/qbittorrent/config/qBittorrent/qBittorrent.conf`
+
+See https://github.com/qbittorrent/qBittorrent/issues/8095#issuecomment-614602695
 
 # Links
 
