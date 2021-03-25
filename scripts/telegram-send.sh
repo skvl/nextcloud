@@ -9,8 +9,7 @@ then
     apt-get install -yqq --no-install-recommends curl --fix-missing
 fi
 
-CAPTURE=/etc/opt/kerberosio/capture
-FILE=$(ls -t ${CAPTURE}/*.mp4 | head -1)
+FILE=$(ls -t ${1}/*.mp4 | head -1)
 
 TG_BOT=$(cat ${TG_BOT_FILE})
 TG_CHAT=$(cat ${TG_CHAT_FILE})

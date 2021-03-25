@@ -91,20 +91,26 @@ services:
     networks:
       - proxy-tier
 
-  plex:
-    image: ghcr.io/linuxserver/plex
-    container_name: plex
-    network_mode: host
+  emby:
+    image: ghcr.io/linuxserver/emby
+    container_name: emby
     environment:
       - PUID=1000
       - PGID=1000
-      - VERSION=docker
-      - PLEX_CLAIM= #optional
+      - TZ=Europe/Moscow
     volumes:
-      - ./data/plex/config:/config
-      - /tvseries:/tv
-      - /movies:/movies
+      - ./data/emby/config:/config
+      - /media/abooks:/data/abooks
+      - /media/movies:/data/movies
+      - /media/music:/data/music
+      - /media/tvseries:/data/tvshows
+      - /media/video-tutorials:/data/tutorials
       - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 8096:8096
+      - 8920:8920
+    devices:
+      - /dev/dri:/dev/dri
     restart: always
 
   calibre-web:
@@ -133,7 +139,11 @@ services:
       - WEBUI_PORT=8080
     volumes:
       - ./data/qbittorrent/config:/config
+      - /media/abooks:/data/abooks
       - /media/downloads:/downloads
+      - /media/movies:/data/movies
+      - /media/music:/media/music
+      - /media/tvseries:/data/tvshows
       - /etc/localtime:/etc/localtime:ro
     ports:
       - 6881:6881
@@ -141,41 +151,22 @@ services:
       - 8084:8080
     restart: always
 
-  kerberos-cam1:
-    image: kerberos/kerberos
-    restart: always
+  motioneye:
+    image: ccrisan/motioneye:master-amd64
     ports:
-      - 8081:80
+      - "8765:8765"
     environment:
       - TG_BOT_FILE=/run/secrets/tg_bot
       - TG_CHAT_FILE=/run/secrets/tg_surveillance_chat
     volumes:
+      - ./data/motioneye/etc:/etc/motioneye
+      - ./data/motioneye/videos:/var/lib/motioneye
       - ./scripts:/scripts
-      - ./data/kerberos/cam1/config:/etc/opt/kerberosio/config
-      - ./data/kerberos/cam1/capture:/etc/opt/kerberosio/capture
-      - ./data/kerberos/cam1/logs:/etc/opt/kerberosio/logs
-      - ./data/kerberos/cam1/web:/var/www/web/config
+      - /etc/localtime:/etc/localtime:ro
     secrets:
       - tg_bot
       - tg_surveillance_chat
-
-  kerberos-cam2:
-    image: kerberos/kerberos
     restart: always
-    ports:
-      - 8082:80
-    environment:
-      - TG_BOT_FILE=/run/secrets/tg_bot
-      - TG_CHAT_FILE=/run/secrets/tg_surveillance_chat
-    volumes:
-      - ./scripts:/scripts
-      - ./data/kerberos/cam2/config:/etc/opt/kerberosio/config
-      - ./data/kerberos/cam2/capture:/etc/opt/kerberosio/capture
-      - ./data/kerberos/cam2/logs:/etc/opt/kerberosio/logs
-      - ./data/kerberos/cam2/web:/var/www/web/config
-    secrets:
-      - tg_bot
-      - tg_surveillance_chat
 
 networks:
   proxy-tier:
