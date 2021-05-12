@@ -151,16 +151,19 @@ services:
       - 8084:8080
     restart: always
 
-  motioneye:
-    image: ccrisan/motioneye:master-amd64
+  motion:
+    image: motionproject/motion
+    container_name: motion
     ports:
-      - "8765:8765"
+      - "7999:7999"
+      - "8081:8081"
+      - "8082:8082"
     environment:
       - TG_BOT_FILE=/run/secrets/tg_bot
       - TG_CHAT_FILE=/run/secrets/tg_surveillance_chat
     volumes:
-      - ./data/motioneye/etc:/etc/motioneye
-      - ./data/motioneye/videos:/var/lib/motioneye
+      - ./secrets/motion:/usr/local/etc/motion
+      - ./data/motion/videos:/var/lib/motion
       - ./scripts:/scripts
       - /etc/localtime:/etc/localtime:ro
     secrets:
